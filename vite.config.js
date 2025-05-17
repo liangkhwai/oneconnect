@@ -10,14 +10,14 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  preview: {
-    port: process.env.PORT,
-    strictPort: true,
-  },
-  server: {
-    port: process.env.PORT,
-    strictPort: true,
-    host: true,
-    origin: "http://0.0.0.0:" + process.env.PORT,
-  },
+  // preview: {
+  //   port: 3000,
+  //   strictPort: true,
+  // },
+  // server: {
+  //   port: 3000,
+  //   strictPort: true,
+  //   host: true,
+  //   origin: "http://0.0.0.0:3000",
+  // },
 });
