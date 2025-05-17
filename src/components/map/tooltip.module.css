@@ -1,0 +1,22 @@
+
+
+
+
+.tooltipSatellite{
+  background-color: transparent;
+  color: #000000 !important;
+  border: none;
+  box-shadow: none;
+  -webkit-text-stroke: #000000 !important;
+  -webkit-text-stroke-width: 0.4px !important;
+  font-size: 1rem;
+}
+.tooltipRoadmap{
+  background-color: transparent;
+  color: #FFFFFF !important;
+  border: none;
+  box-shadow: none;
+  -webkit-text-stroke: #000000 !important;
+  -webkit-text-stroke-width: 0.4px !important;
+  font-size: 1rem;
+}

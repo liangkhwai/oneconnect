@@ -1,85 +1,102 @@
-import { SwitchMode } from "../../admin/SwitchMode";
-import { Flex } from "antd";
-import olderIcon from "@/assets/markerIcon/older_person.png";
-import philosopherIcon from "@/assets/markerIcon/philosopher.png";
-import leaderIcon from "@/assets/markerIcon/community_leader.png";
-import rescueIcon from "@/assets/markerIcon/rescue.png";
-export default function MapLayerTwoSidebar({ place, isAdmin, setIsAdmin }) {
-  const mapIconMarker = (type) => {
-    switch (type) {
-      case "ผู้สูงอายุ":
-        return olderIcon;
-      case "ปราชญ์ชุมชน":
-        return philosopherIcon;
-      case "ผู้นำชุมชน":
-        return leaderIcon;
-      case "กู้ภัย":
-        return rescueIcon;
-      default:
-        return false;
+import { Card, Flex, Switch } from "antd";
+
+import CardBox from "@/components/ui/Card";
+import MainMarkerTypeEnum from "@/enum/main-marker-type";
+import { usePlaceSummaryMarker } from "@/hooks/user-places";
+import { useGlobalMapContext } from "@/context/MapContext";
+export default function MapLayerTwoSidebar({}) {
+  const { placeSelected, setEnabledMarkers } = useGlobalMapContext();
+  const {
+    data: summaryMarker,
+    isLoading: isLoadingPlaceSummary,
+    isError: isErrorPlaceSummary,
+  } = usePlaceSummaryMarker(placeSelected?._id);
+  if (isLoadingPlaceSummary) return <div>Loading...</div>;
+  const handleToggle = (_id, checked) => {
+    if (checked) {
+      setEnabledMarkers((prev) => [...prev, _id]);
+    } else {
+      setEnabledMarkers((prev) => prev.filter((id) => id !== _id));
     }
   };
+  const markerPlaceSummary = () => {
+    return summaryMarker.filter((marker) => {
+      return marker.mainType === MainMarkerTypeEnum.PLACES;
+    });
+  };
+
+  const markerOtherPlaceSummary = () => {
+    return summaryMarker.filter((marker) => {
+      return marker.mainType != MainMarkerTypeEnum.PLACES;
+    });
+  };
+  const summary = markerOtherPlaceSummary();
+  const summaryPlace = markerPlaceSummary();
 
   return (
-    <>
-      <SwitchMode isAdmin={isAdmin} setIsAdmin={setIsAdmin} />
-      <h2 className="text-xl font-bold text-gray-700">ข้อมูลสรุป</h2>
+    <Flex vertical gap={10}>
+      <CardBox
+        title="ข้อมูลพื้นฐาน"
+        backgroundColor={"#0FA4AF"}
+        fontColor={"white"}
+      >
+        <div className="grid grid-cols-2 gap-4 mx-5 my-1 font-semibold items-start">
+          {/* Column 1: Labels */}
+          <div className="flex flex-col gap-2">
+            <span>ประชากร</span>
+            <span>ครัวเรือน</span>
+            {summaryPlace.map((item, index) => (
+              <span key={index}>{item.name}</span>
+            ))}
+          </div>
 
-      <p className="text-gray-600 text-lg py-1">
-        จำนวนประชากร:{" "}
-        <span className="font-semibold text-blue-600">
-          {place.population} คน
-        </span>
-      </p>
-      <p className="text-gray-600 text-lg py-1">
-        จำนวนครัวเรือน:{" "}
-        <span className="font-semibold text-blue-600">
-          {place.household} ครัวเรือน
-        </span>
-      </p>
-
-      {place?.summary.map((summary, idx) => {
-        return (
-          <div key={idx} className="text-gray-600 text-lg py-1">
-            <Flex gap={10} align="center" wrap>
-              <div>
-                {mapIconMarker(summary.name) !== false ? (
-                  <img
-                    className="w-10 h-10"
-                    src={mapIconMarker(summary.name)}
+          {/* Column 2: Values + inline switches */}
+          <div className="flex flex-col gap-2">
+            <div>{placeSelected?.population} คน</div>
+            <div>{placeSelected?.household} ครัวเรือน</div>
+            {summaryPlace.map((item, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <span>{item.count} ที่</span>
+                {item.count > 0 && (
+                  <Switch
+                    defaultChecked
+                    onChange={(checked) => handleToggle(item._id, checked)}
                   />
-                ) : (
-                  summary.name
                 )}
               </div>
-              <span className="font-semibold text-blue-600">
-                {summary.count} หมุด
-              </span>
-            </Flex>
+            ))}
           </div>
-        );
-      })}
+        </div>
+      </CardBox>
+      <CardBox
+        title={"ข้อมูลคนเมือง"}
+        fontColor={"#0FA4AF"}
+        borderColor={"#0FA4AF"}
+      >
+        <div className="grid grid-cols-2 gap-4 mx-5 my-1 font-semibold items-start">
+          {/* Column 1: Labels */}
+          <div className="flex flex-col gap-2">
+            {summary.map((item, index) => (
+              <p key={index}>{item.name}</p>
+            ))}
+          </div>
 
-      {/* <h2 className="text-xl font-bold text-gray-700 mt-4">
-            ข้อมูลตามชุมชน
-          </h2> */}
-      <ul className="space-y-3 mt-2">
-        {/* {communities.map((community) => (
-              <li
-                key={community.id}
-                className="p-3 bg-gray-50 rounded-md border border-gray-300"
-              >
-                <span className="font-semibold text-gray-800">
-                  {community.name}
-                </span>
-                :
-                <span className="text-blue-600 font-medium">
-                  {" "}
-                  {community.elderly_count} คน
-                </span>
-              </li>
-            ))} */}
-      </ul>
-    </>
+          {/* Column 2: Value + inline switch */}
+          <div className="flex flex-col gap-2">
+            {summary.map((item, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <span>{item.count} คน</span>
+                {item.count > 0 && (
+                  <Switch
+                    defaultChecked
+                    onChange={(checked) => handleToggle(item._id, checked)}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </CardBox>
+    </Flex>
   );
 }

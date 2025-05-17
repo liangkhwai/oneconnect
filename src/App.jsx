@@ -1,7 +1,11 @@
 import React from "react";
 import AppRoutes from "./routes/AppRoutes";
 import { ContextProvider } from "./context/Context";
-import { Button, ConfigProvider, Space } from "antd";
+import { ConfigProvider, App as AntApp } from "antd";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
 
 function App() {
   return (
@@ -19,7 +23,11 @@ function App() {
       }}
     >
       <ContextProvider>
-        <AppRoutes />
+        <QueryClientProvider client={queryClient}>
+          <AntApp>
+            <AppRoutes />
+          </AntApp>
+        </QueryClientProvider>
       </ContextProvider>
     </ConfigProvider>
   );

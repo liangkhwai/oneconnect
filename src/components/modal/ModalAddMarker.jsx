@@ -9,15 +9,28 @@ import {
   Row,
   Col,
   Switch,
+  ConfigProvider,
+  Radio,
+  Flex,
+  Tag,
 } from "antd";
+import th_TH from "antd/lib/locale/th_TH";
 
-const { Option } = Select;
+import ModalAddMaker from "../Form/Person/ModalAddMarker";
+import ModalAddPlace from "../Form/Place/ModalAddPlace";
+import MainMarkerTypeEnum from "@/enum/main-marker-type";
+import {
+  FacebookOutlined,
+  LinkedinOutlined,
+  TwitterOutlined,
+  YoutubeOutlined,
+} from "@ant-design/icons";
+import { usePlaceMarkerType } from "@/hooks/user-places";
 
 const ModalAddMarker = ({
   visible,
   onCancel,
   handleOK,
-  data,
   place,
   pointSelected,
   zoneSelected,
@@ -27,280 +40,186 @@ const ModalAddMarker = ({
   isTriggerReq,
   isAdmin,
 }) => {
-  console.log(place);
+  const { data: placeMarkerType } = usePlaceMarkerType(place?._id);
+  console.dir(place);
   console.log(pointSelected);
   console.log(zoneSelected);
+  console.log(placeMarkerType);
   const [form] = Form.useForm();
+  const [mainTypeSelected, setMainTypeSelected] = useState();
+  // use for render border in marker type selected
+  const [selectMarkerTypeId, setSelectMarkerTypeId] = useState(undefined);
   useEffect(() => {
     if (place && pointSelected) {
       form.setFieldsValue({
         placeId: place._id,
-        zone: zoneSelected?.zoneName,
+        zone: zoneSelected?.zoneId,
         latitude: pointSelected[0] || "", // lat
         longitude: pointSelected[1] || "", // lng
       });
+      setMainTypeSelected(undefined);
+      setSelectMarkerTypeId(undefined);
     }
   }, [place, pointSelected, form]);
 
   const handleAddMarker = () => {
     form.validateFields().then((values) => {
-      handleOK(values);
+      console.log(values);
+
+      const updatedValues = {
+        ...values,
+        typeName: mainTypeSelected,
+      };
+
+      handleOK(updatedValues); // Pass updated values
       form.resetFields();
     });
   };
 
-  return (
-    <Modal
-      title="ลงทะเบียนคนเมือง"
-      open={visible}
-      onCancel={onCancel}
-      footer={[
-        <Button key="cancel" onClick={onCancel}>
-          ยกเลิก
-        </Button>,
-        isAdmin ? (
-          <Button key="add" type="primary" onClick={handleAddMarker}>
-            ปักหมุด
-          </Button>
-        ) : (
-          <Button
-            key="add"
-            type="primary"
-            onClick={handleAddMarker}
-            disabled={
-              (isLatLngError && isLoadingLatLng === false) ||
-              isTriggerReq !== true
-            }
-          >
-            ปักหมุด
-          </Button>
-        ),
-      ]}
-      width={{
-        xs: "90%",
-        sm: "80%",
-        md: "90%",
-        lg: "50%",
-        xl: "35%",
-        xxl: "35%",
-      }}
-      className="max-h-[70vh] overflow-y-auto rounded-xl"
-    >
-      <div className="p-4">
-        <Form form={form} layout="vertical">
-          <Row gutter={8}>
-            <Col span={24} sm={24} md={24} xl={24} xxl={24}>
-              <Form.Item
-                name="name"
-                label="ชื่อหมุด"
-                rules={[{ required: true, message: "กรุณากรอกชื่อของหมุด" }]}
-              >
-                <Input placeholder="e.g., ตลาดน้ำ" maxLength={20} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={8}>
-            <Col span={24} sm={24} md={24} xl={24} xxl={24}>
-              <Form.Item
-                name="pinType"
-                label="ประเภทหมุด"
-                rules={[{ required: true, message: "กรุณาเลือกประเภทของหมุด" }]}
-              >
-                {data?.pinTypes ? (
-                  <Select
-                    placeholder="ประเภทข้อมูล"
-                    options={data.pinTypes.map((type) => ({
-                      label: type,
-                      value: type,
-                    }))}
-                  />
-                ) : (
-                  <span>Loading...</span>
-                )}
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={8}>
-            <Col span={24} sm={24} md={24} xl={24} xxl={24}>
-              <Form.Item
-                name="idCard"
-                label="เลขบัตรประชาชน (13 หลัก)"
-                rules={[
-                  { required: true, message: "กรุณากรอกเลขบัตรประชาชน" },
-                  {
-                    pattern: /^[0-9]{13}$/,
-                    message: "กรุณากรอกเลขบัตรประชาชนให้ถูกต้อง(13 หลัก)",
-                  },
-                ]}
-              >
-                <Input placeholder="e.g., 1234567890123" maxLength={13} />
-              </Form.Item>
-            </Col>
-          </Row>
+  const onSelectMarkerType = (value) => {
+    setSelectMarkerTypeId(value);
+    const selectedType = placeMarkerType.find((item) => item._id === value);
+    const typeName = selectedType ? selectedType.type.name : undefined;
 
-          <Row gutter={8}>
-            <Col span={24} sm={24} md={12} xl={12} xxl={12}>
-              <Form.Item
-                name="firstName"
-                label="ชื่อจริง"
-                rules={[{ required: true, message: "กรุณากรอกชื่อจริง" }]}
-              >
-                <Input placeholder="e.g., สมชาย" maxLength={20} />
-              </Form.Item>
-            </Col>
-            <Col span={24} sm={24} md={12} xl={12} xxl={12}>
-              <Form.Item
-                name="lastName"
-                label="นามสกุล"
-                rules={[{ required: true, message: "กรุณากรอกนามสกุล" }]}
-              >
-                <Input placeholder="e.g., ใจดี" maxLength={20} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={8}>
-            <Col span={24} sm={24} md={24} xl={24} xxl={24}>
-              <Form.Item
-                name="gender"
-                label="เพศ"
-                rules={[{ required: true, message: "กรุณาเลือกเพศ" }]}
-              >
-                <Select placeholder="e.g., ชาย / หญิง / อื่น ๆ">
-                  <Option value="Male">ชาย</Option>
-                  <Option value="Female">หญิง</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={8}>
-            <Col span={24} sm={24} md={12} xl={12} xxl={12}>
-              <Form.Item
-                name="birthdate"
-                label="วันเกิด"
-                rules={[{ required: true, message: "กรุณากรอกวันเกิด" }]}
-              >
-                <DatePicker
-                  style={{ width: "100%" }}
-                  placeholder="e.g., 2025-01-12"
-                />
-              </Form.Item>
-            </Col>
-            <Col span={24} sm={24} md={12} xl={12} xxl={12}>
-              <Form.Item
-                name="age"
-                label="อายุ"
-                rules={[{ required: true, message: "กรุณากรอกอายุ" }]}
-              >
-                <Input placeholder="e.g., 30" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={8}>
-            <Col span={24} sm={24} md={24} xl={24} xxl={24}>
-              <Form.Item
-                name="telNumber"
-                label="เบอร์โทรศัพท์"
-                rules={[
-                  { required: true, message: "กรุณากรอกเบอร์โทรศัพท์" },
-                  {
-                    pattern: /^[0-9]{10}$/,
-                    message: "กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง (10 หลัก)",
-                  },
-                ]}
-              >
-                <Input placeholder="e.g., 0812345678" maxLength={10} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={8}>
-            <Col span={24} sm={24} md={24} xl={24} xxl={24}>
-              <Form.Item
-                name="zone"
-                label="ชุมชน"
-                rules={[{ required: true, message: "กรุณาขอข้อมูลตำแหน่ง" }]}
-              >
-                <Select
-                  placeholder="กรุณาขอข้อมูลตำแหน่ง"
-                  disabled
-                  value={zoneSelected?.zoneId}
-                >
-                  <Option
-                    key={zoneSelected?.zoneId}
-                    value={zoneSelected?.zoneId}
-                  >
-                    {zoneSelected?.zoneName}
-                  </Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={8}>
-            <Col span={24} sm={24} md={24} xl={24} xxl={24}>
-              <Form.Item
-                name="placeId"
-                label="เมือง"
-                rules={[{ required: true, message: "กรุณากรอกรหัสเมือง" }]}
-              >
-                <Select
-                  placeholder="กรุณาขอข้อมูลตำแหน่ง"
-                  disabled
-                  value={place?._id}
-                >
-                  <Option key={place._id} value={place._id}>
-                    {place.amphurName}
-                  </Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={8}>
-            <Col span={24} sm={24} md={12} xl={12} xxl={12}>
-              <Form.Item
-                name="latitude"
-                label="ละติจูด"
-                rules={[{ required: true, message: "ละติจูด" }]}
-              >
-                <Input placeholder="กรุณาขอข้อมูลตำแหน่ง" disabled />
-              </Form.Item>
-            </Col>
-            <Col span={24} sm={24} md={12} xl={12} xxl={12}>
-              <Form.Item
-                name="longitude"
-                label="ลองจิจูด"
-                rules={[{ required: true, message: "ลองจิจูด" }]}
-              >
-                <Input placeholder="กรุณาขอข้อมูลตำแหน่ง" disabled />
-              </Form.Item>
-            </Col>
-          </Row>
-          {!isAdmin && (
+    setMainTypeSelected(typeName); // Update state (if needed)
+    form.setFieldsValue({ markerType: value}); 
+    form.setFieldsValue({ typeName: typeName}); 
+  };
+
+  return (
+    <ConfigProvider locale={th_TH}>
+      <Modal
+        title="ลงทะเบียนหมุด"
+        open={visible}
+        onCancel={onCancel}
+        footer={[
+          <Button key="cancel" onClick={onCancel}>
+            ยกเลิก
+          </Button>,
+          isAdmin ? (
+            <Button key="add" type="primary" onClick={handleAddMarker}>
+              ปักหมุด
+            </Button>
+          ) : (
+            <Button
+              key="add"
+              type="primary"
+              onClick={handleAddMarker}
+              disabled={
+                (isLatLngError && isLoadingLatLng === false) ||
+                isTriggerReq !== true
+              }
+            >
+              ปักหมุด
+            </Button>
+          ),
+        ]}
+        width={{
+          xs: "90%",
+          sm: "80%",
+          md: "90%",
+          lg: "50%",
+          xl: "35%",
+          xxl: "35%",
+        }}
+        
+        bodyStyle={{ overflowY: "auto", maxHeight: "calc(100vh - 40vh)" }}
+      >
+        <div className="p-4">
+          <Form form={form} layout="vertical">
             <Row gutter={8}>
               <Col span={24} sm={24} md={24} xl={24} xxl={24}>
-                {isTriggerReq === false && isAdmin !== true && (
-                  <span className="text-red-500 text-sm">
-                    * กรุณาขอข้อมูลตำแหน่ง
-                  </span>
-                )}
-                {isLatLngError && (
-                  <span className="text-red-500 text-sm">
-                    * คุณไม่ได้อยู่ในพื้นที่
-                  </span>
-                )}
-                <Button
-                  className="w-full"
-                  type="primary"
-                  onClick={() => getLocation()}
-                  loading={isLoadingLatLng ? isLoadingLatLng : false}
+                <Form.Item
+                  name="name"
+                  label="ชื่อหมุด"
+                  rules={[{ required: true, message: "กรุณากรอกชื่อของหมุด" }]}
                 >
-                  ขอข้อมูลตำแหน่ง
-                </Button>
+                  <Input placeholder="e.g., ตลาดน้ำ" maxLength={255} />
+                </Form.Item>
               </Col>
             </Row>
-          )}
-        </Form>
-      </div>
-    </Modal>
+            <Row gutter={8}>
+              <Col span={24} sm={24} md={24} xl={24} xxl={24}>
+                <Form.Item
+                  name="markerType"
+                  label="ประเภทหมุด"
+                  rules={[
+                    { required: true, message: "กรุณาเลือกประเภทของหมุด" },
+                  ]}
+                >
+                  {placeMarkerType ? (
+                    <div className="flex gap-2 flex-wrap">
+                      {placeMarkerType.map((type) => (
+                        <Button
+                        
+                        name="markerType"
+                          className={`rounded-md border-gray-100   ${
+                            selectMarkerTypeId === type._id
+                              ? "border-green-800"
+                              : ""
+                          }`}
+                          key={type._id}
+                          onClick={() => onSelectMarkerType(type._id)}
+                        >
+                          {type.icon && (
+                            <span>
+                              <img
+                                className="w-5 h-5 rounded-full"
+                                src={type.icon}
+                                alt={type.name}
+                              />
+                            </span>
+                          )}
+                          {type.name}
+                        </Button>
+                      ))}
+                    </div>
+                  ) : (
+                
+                    <span>Loading...</span>
+                  )}
+                 
+                </Form.Item>
+              </Col>
+            </Row>
+            {(() => {
+              if (mainTypeSelected === MainMarkerTypeEnum.PERSON) {
+                return (
+                  <ModalAddMaker
+                    form={form}
+                    zoneSelected={zoneSelected}
+                    place={place}
+                    pointSelected={pointSelected}
+                    getLocation={getLocation}
+                    isLoadingLatLng={isLoadingLatLng}
+                    isLatLngError={isLatLngError}
+                    isTriggerReq={isTriggerReq}
+                    isAdmin={isAdmin}
+                  />
+                );
+              } else if (mainTypeSelected === MainMarkerTypeEnum.PLACES) {
+                return (
+                  <ModalAddPlace
+                    form={form}
+                    zoneSelected={zoneSelected}
+                    place={place}
+                    pointSelected={pointSelected}
+                    getLocation={getLocation}
+                    isLoadingLatLng={isLoadingLatLng}
+                    isLatLngError={isLatLngError}
+                    isTriggerReq={isTriggerReq}
+                    isAdmin={isAdmin}
+                  />
+                );
+              }
+              return null;
+            })()}
+          </Form>
+        </div>
+      </Modal>
+    </ConfigProvider>
   );
 };
+<style>.radio-gap{}</style>;
 
 export default ModalAddMarker;

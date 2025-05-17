@@ -10,9 +10,11 @@ const Navbar = () => {
     <nav className="bg-greenLight shadow-md">
       <div className="container mx-auto flex justify-between items-center md:px-4 p-4">
         <div>
-          <p className="text-2xl font-bold text-white">OCN</p>
+          <NavLink to="/">
+            <p className="text-2xl font-bold text-white">OCN</p>
+          </NavLink>
         </div>
-        <div className="hidden md:flex space-x-8">
+        <div className="hidden md:flex space-x-8 items-center">
           <NavLink
             to="/"
             end
@@ -31,24 +33,6 @@ const Navbar = () => {
           >
             แผนที่
           </NavLink>
-          {/* <NavLink
-            to=""
-            end
-            className={({ isActive }) =>
-              isActive ? "text-white font-bold" : "text-greenSoft"
-            }
-          >
-            ของดีในเมือง
-          </NavLink> */}
-          {/* <NavLink
-            to=""
-            end
-            className={({ isActive }) =>
-              isActive ? "text-white font-bold" : "text-greenSoft"
-            }
-          >
-            สุขภาพคนเมือง
-          </NavLink> */}
           <DropdownListMenu />
         </div>
         <button className="md:hidden px-4" onClick={() => setIsOpen(!isOpen)}>
@@ -64,7 +48,7 @@ const Navbar = () => {
               isActive ? "text-white font-bold" : "text-greenSoft"
             }
             onClick={() => setIsOpen(false)}
-            style={{ width: "100%", "textAlign": "center" }}
+            style={{ width: "100%", textAlign: "center" }}
           >
             ข้อมูลเมือง
           </NavLink>
@@ -75,30 +59,11 @@ const Navbar = () => {
               isActive ? "text-white font-bold" : "text-greenSoft"
             }
             onClick={() => setIsOpen(false)}
-            style={{ width: "100%", "textAlign": "center" }}
+            style={{ width: "100%", textAlign: "center" }}
           >
             แผนที่
           </NavLink>
-          {/* <NavLink
-            to="/"
-            end
-            className={({ isActive }) =>
-              isActive ? "text-cyan-400 font-bold" : "text-cyan-50"
-            }
-            onClick={() => setIsOpen(false)}
-          >
-            ของดีในเมือง
-          </NavLink>
-          <NavLink
-            to="/"
-            end
-            className={({ isActive }) =>
-              isActive ? "text-cyan-400 font-bold" : "text-cyan-50"
-            }
-            onClick={() => setIsOpen(false)}
-          >
-            สุขภาพคนเมือง
-          </NavLink> */}
+
           <DropdownListMenu />
         </div>
       )}

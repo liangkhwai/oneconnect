@@ -1,124 +1,92 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import React from "react";
 import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import thailandPolygon from "@/components/data/thailand.json";
 import { Row, Col } from "antd";
-import { ENDPOINT } from "@/components/endpoint";
 import MapLayerOneSidebar from "./MapLayerOne/MapLayerOneSidebar";
+import { useGlobalMapContext } from "@/context/MapContext";
+import { usePlacePolygon } from "@/hooks/user-places";
 
-export default function ServiceAreaSelection({ changePage, setPlace }) {
-  const [placeSelected, setPlaceSelected] = useState();
-  const [placePolygon, setPlacePolygon] = useState([]);
-  const [selectedProvince, setSelectedProvince] = useState(null);
-  const [flyToLatLng, setFlyToLatLng] = useState([]);
+const DEFAULT_CENTER = [13.885556744960699, 100.63529495228143];
+const DEFAULT_ZOOM = 6;
+
+export default function ServiceAreaSelection() {
+  const { coordinateSelected,placeSelected } = useGlobalMapContext();
+  const { data: placePolygonData, isLoading, isError } = usePlacePolygon();
+
+  if (isLoading) return <div>Loading...</div>;
+  if (isError) return <div>Error: {isError}</div>;
+
+  
+const FlyToProvince = ({ position, zoom = DEFAULT_ZOOM }) => {
+  const map = useMap();
 
   useEffect(() => {
-    const fetchData = async () => {
-      await Promise.allSettled([fetchPlacePolygon()]);
-    };
-    fetchData();
-  }, []);
-
-  const fetchPlacePolygon = async () => {
-    try {
-      const placePolygon = await fetch(ENDPOINT.GET_ALL_PLACE);
-      const response = await placePolygon.json();
-      setPlacePolygon(response.data ?? []);
-    } catch (error) {
-      console.error("ERROR FETCH PLACES:", error);
+    if (!position || position.length !== 2) {
+      map.flyTo(DEFAULT_CENTER, DEFAULT_ZOOM, { duration: 1 });
+    } else {
+      const [lat, lng] = position;
+      if (lat === undefined || lng === undefined) {
+        map.flyTo(DEFAULT_CENTER, DEFAULT_ZOOM, { duration: 1 });
+      } else {
+        map.flyTo(position, zoom, { duration: 1 });
+      }
     }
-  };
+  }, [map, position, zoom]);
 
-  const FlyToProvince = ({ position, zoom }) => {
-    console.log("FLY POSITION", position);
-    const map = useMap();
-
-    if (position) {
-      map.flyTo(position, zoom ?? 10, {
-        duration: 1.5, // Animation duration in seconds
-      });
-    }
-
-    return null;
-  };
-
-  // const handleMapClick = (e) => {
-  //   const { NL_NAME_1 } = e.target.feature.properties;
-  //   console.log(e.target.feature.properties);
-  //   console.log(NL_NAME_1.slice(7));
-
-  //   setSelectedProvince(NL_NAME_1.slice(7) ?? null);
-  // };
+  return null;
+};
 
   return (
     <div className=" bg-gray-100">
-      <Row gutter={20}>
-        <Col xl={16} xs={0} md={24} order={1}>
-          {/* <div className="map-section flex-grow h-[60vh] lg:h-[90vh] w-full lg:w-3/4 rounded-lg shadow-lg"> */}
-          <div className="flex flex-col items-center md:h-[92.5vh] lg:h-[93vh] xl:h-[93vh]">
+      <Row gutter={0}>
+        <Col xl={16} md={24} order={1}>
+          <div className="flex flex-col items-center h-[80vh]">
             <MapContainer
-              center={[13.885556744960699, 100.63529495228143]}
-              zoom={6}
+              center={DEFAULT_CENTER}
+              zoom={DEFAULT_ZOOM}
               className="h-full w-full "
               scrollWheelZoom={false}
             >
               <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-              {thailandPolygon && (
-                <GeoJSON
-                  data={thailandPolygon}
-                  // onEachFeature={(feature, layer) => {
-                  //   layer.on({
-                  //     click: handleMapClick,
-                  //   });
-                  // }}
-                  style={{
-                    color: "#555",
-                    weight: 1,
-                    fillColor: "#D6D6DA",
-                    fillOpacity: 0.5,
-                  }}
-                />
-              )}
-              {placePolygon &&
-                placePolygon.map((polygon, idx) => {
-                  return (
-                    <React.Fragment key={`polygon-${idx}`}>
-                      <GeoJSON
-                        key={`place-${idx}`}
-                        data={polygon.place.features}
-                        style={{
-                          color: "black",
-                          weight: 4,
-                          fillColor: "#D6D6DA",
-                          fillOpacity: 0.5,
-                          dashArray: "4 10",
-                        }}
-                      />
-                      <GeoJSON
-                        key={`zone-${idx}`}
-                        data={polygon.zones.features}
-                        style={{
-                          color: "#f0ff",
-                          weight: 1,
-                          fillColor: "#D6D6DA",
-                          fillOpacity: 0.5,
-                        }}
-                      />
-                    </React.Fragment>
-                  );
-                })}
+              <GeoJSON
+                data={thailandPolygon}
+                style={{
+                  color: "#555",
+                  weight: 1,
+                  fillColor: "#D6D6DA",
+                  fillOpacity: 0.5,
+                }}
+              />
+              {placePolygonData.map((polygon, idx) => (
+                <React.Fragment key={idx}>
+                  <GeoJSON
+                    data={polygon.place.features}
+                    style={{
+                      color: "black",
+                      weight: 4,
+                      fillColor: "#D6D6DA",
+                      fillOpacity: 0.5,
+                      dashArray: "4 10",
+                    }}
+                  />
+                  <GeoJSON
+                    data={polygon.zones.features}
+                    style={{
+                      color: "#f0ff",
+                      weight: 1,
+                      fillColor: "#D6D6DA",
+                      fillOpacity: 0.5,
+                    }}
+                  />
+                </React.Fragment>
+              ))}
 
-              {selectedProvince && (
-                <>
-                  <FlyToProvince position={flyToLatLng} />
-                </>
-              )}
-              {placeSelected && (
-                <>
-                  <FlyToProvince position={flyToLatLng} zoom={13} />
-                </>
-              )}
+              <FlyToProvince
+                position={coordinateSelected}
+                zoom={placeSelected ? 13 : DEFAULT_ZOOM}
+              />
             </MapContainer>
           </div>
         </Col>
@@ -126,18 +94,9 @@ export default function ServiceAreaSelection({ changePage, setPlace }) {
           xl={8}
           md={24}
           order={2}
-          className="flex flex-col justify-center items-center"
+          className="flex flex-col justify-center items-center p-5"
         >
-          {/* -------- Sidebar -------- */}
-          <MapLayerOneSidebar
-            changePage={changePage}
-            selectedProvince={selectedProvince}
-            placeSelected={placeSelected}
-            setFlyToLatLng={setFlyToLatLng}
-            setPlaceSelected={setPlaceSelected}
-            setPlace={setPlace}
-            setSelectedProvince={setSelectedProvince}
-          />
+          <MapLayerOneSidebar />
         </Col>
       </Row>
     </div>
