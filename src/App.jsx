@@ -15,6 +15,7 @@ function App() {
           // Seed Token
           colorPrimary: "#024950",
           colorFillSecondary: "#0FA4AF",
+          
           borderRadius: 2,
 
           // Alias Token
