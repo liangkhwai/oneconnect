@@ -2,7 +2,10 @@ import { Marker, Popup } from "react-leaflet";
 import * as L from "leaflet";
 import { Button } from "antd";
 
-export const RenderMarker = ({ markers, isAdmin, handleView, handleMaintainView }) => {
+
+export const RenderMarker = ({ markers, isAdmin, handleView }) => {
+  console.log('markers frontend', markers);
+  console.log(isAdmin)
   const getIcon = (iconUrl) => {
     console.log(iconUrl);
     if (!iconUrl) {
@@ -27,6 +30,7 @@ export const RenderMarker = ({ markers, isAdmin, handleView, handleMaintainView 
   return (
     <>
       {markers.map((marker) => {
+        console.log('1',marker)
         return isAdmin ? (
           <Marker
             key={marker._id}
@@ -36,10 +40,10 @@ export const RenderMarker = ({ markers, isAdmin, handleView, handleMaintainView 
           >
             <Popup>
               <div className="py-2">
-                ชื่อ : {marker.properties?.markerInfo.name}
+                ชื่อ : {marker.properties?.markerInfo.name || "ไม่ระบุ"}
               </div>
               <div className="py-2">
-                ประเภท : {marker.properties?.markerType?.name}
+                ประเภท : {marker.properties?.markerType?.name || "ไม่ระบุ"}
               </div>
               <div className="text-center">
                 <Button type="primary" onClick={() => handleView(marker)}>
@@ -57,10 +61,10 @@ export const RenderMarker = ({ markers, isAdmin, handleView, handleMaintainView 
           >
             <Popup>
               <div className="py-2">
-                ชื่อ : {marker.properties?.markerInfo.name}
+                ชื่อ : {marker.properties?.markerInfo.name || "ไม่ระบุ"}
               </div>
               <div className="py-2">
-                ประเภท : {marker.properties?.markerType?.name}
+                ประเภท : {marker.properties?.markerType?.name || "ไม่ระบุ"}
               </div>
               {marker.properties.markerType.type.name === "Repair" && (
                 <div className="text-center">
